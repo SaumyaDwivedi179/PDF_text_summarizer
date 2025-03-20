@@ -92,7 +92,7 @@ st.markdown("""
         .custom-box:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            background:background:#f9f9f9 /*#ffffff;  */
+            background:background:#454139; /*#ffffff;  */
             # color:#454139;/*#ffffff;  */
             color:#faf7f0;
         }
