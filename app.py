@@ -203,7 +203,7 @@ st.sidebar.markdown("<div class='sidebar-heading upload'>📂 Upload PDF</div>",
 uploaded_file = st.sidebar.file_uploader("Choose a PDF", type=["pdf"])
 
 # -------------------- Language Selection --------------------
-st.sidebar.markdown("<div class='sidebar-heading language'>🌐 Select Language</div>", unsafe_allow_html=True)
+st.sidebar.markdown("## 🌐 Select Language")
 language = st.sidebar.selectbox(
     "Choose language for the summary",
     [
@@ -214,7 +214,7 @@ language = st.sidebar.selectbox(
     ]
 )
 
-# Map language names to language codes
+# Language codes
 language_codes = {
     "English": "en", "French": "fr", "Spanish": "es", "German": "de",
     "Italian": "it", "Hindi": "hi", "Chinese": "zh-cn", "Japanese": "ja",
@@ -222,28 +222,44 @@ language_codes = {
     "Marathi": "mr", "Bengali": "bn", "Gujarati": "gu",
     "Malayalam": "ml", "Punjabi": "pa"
 }
+
 language_code = language_codes[language]
 
 # -------------------- PDF Text Extraction --------------------
 def extract_text_with_pymupdf(pdf_path):
+    """Extracts text from PDF using PyMuPDF."""
     pdf = fitz.open(pdf_path)
     full_text = "".join(page.get_text() for page in pdf)
     pdf.close()
     return full_text
 
-def generate_summary(content, lang="en", length=500):
-    """Generate summary in the specified language."""
+# -------------------- Bilingual Summary Generation --------------------
+def bilingual_summary(full_text, lang="en", length=500):
+    """Generates a bilingual summary if language is not English, else only English."""
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")
-        prompt = (
-            f"Summarize the following content in {lang} with approximately {length} words:\n\n"
-            f"{content}"
+        
+        # Generate English Summary
+        prompt_en = (
+            f"Summarize this content in English with approximately {length} words:\n\n{full_text}"
         )
-        response = model.generate_content(prompt)
-        return response.text
+        response_en = model.generate_content(prompt_en).text
+
+        # If the selected language is English, return only English summary
+        if lang == "en":
+            return {"en": response_en}
+
+        # Generate Summary in the selected language
+        prompt_lang = (
+            f"Summarize this content in {language} ({lang}) with approximately {length} words:\n\n{full_text}"
+        )
+        response_lang = model.generate_content(prompt_lang).text
+
+        return {"en": response_en, lang: response_lang}
+    
     except Exception as e:
         st.error(f"Error during summarization: {e}")
-        return ""
+        return {"en": "", lang: ""}
 
 # -------------------- Main Workflow --------------------
 if uploaded_file:
@@ -251,56 +267,46 @@ if uploaded_file:
     with open(pdf_path, "wb") as f:
         f.write(uploaded_file.read())
 
+    # Extract text
     full_text = extract_text_with_pymupdf(pdf_path)
 
     st.markdown("### 📚 Extracted PDF Content")
     with st.expander("📚 **View Extracted Text**"):
         st.markdown(f"<div class='custom-box'>{full_text}</div>", unsafe_allow_html=True)
-        
 
     # 🎯 Add Slider for Summary Length
     summary_length = st.slider(
-        "🔧 Select Summary Length (in words)",
-        min_value=200,
-        max_value=1000,
-        value=500,  # Default value
+        "🔧 Select Summary Length (in words)", 
+        min_value=200, 
+        max_value=1000, 
+        value=500,    
         step=50
     )
 
     if st.button("⚡ Generate Summary"):
-        # Generate English summary
-        english_summary = generate_summary(full_text, lang="en", length=summary_length)
+        summaries = bilingual_summary(full_text, lang=language_code, length=summary_length)
 
-        # Generate summary in the selected language (if different from English)
-        if language != "English":
-            translated_summary = generate_summary(full_text, lang=language_code, length=summary_length)
+        # Display summaries
+        st.markdown("### ✍️ Summary:")
 
-            # Display both summaries
-            st.markdown(f"### ✍️  {language} Summary:")
-            st.markdown(f"<div class='custom-box'>{translated_summary}</div>", unsafe_allow_html=True)
-           
-
-            st.markdown("### ✍️ English Summary:")
-            st.markdown(f"<div class='custom-box'>{english_summary}</div>", unsafe_allow_html=True)
-           
-
-            
-
- # Combine both summaries for download
-            combined_summary = (
-                f"English Summary:\n\n{english_summary}\n\n"
-                f"{language} Summary:\n\n{translated_summary}"
-            )
-            
-            st.download_button("📥 Download Summary", combined_summary, file_name="summary.txt")
-
+        # Show English summary if English is selected or bilingual for other languages
+        if language == "English":
+            st.markdown(f"#### 🗨️ English Summary:")
+            st.markdown(f"<div class='custom-box'>{summaries['en']}</div>", unsafe_allow_html=True)
         else:
-            # Display only English summary if language is English
-            st.markdown("### ✍️ English Summary:")
-            st.markdown(f"<div class='custom-box'>{english_summary}</div>", unsafe_allow_html=True)
-             # Download only English summary
-            st.download_button("📥 Download Summary", english_summary, file_name="summary.txt")
+            st.markdown(f"#### 🌐 {language} Summary:")
+            st.markdown(f"<div class='custom-box'>{summaries[language_code]}</div>", unsafe_allow_html=True)
+            st.markdown(f"#### 🗨️ English Summary:")
+            st.markdown(f"<div class='custom-box'>{summaries['en']}</div>", unsafe_allow_html=True)
 
+            
+
+        # Download buttons
+        if language == "English":
+            st.download_button("📥 Download English Summary", summaries['en'], file_name="summary.txt")
+        else:
+            bilingual_summary_text = f"English Summary:\n{summaries['en']}\n\n{language} Summary:\n{summaries[language_code]}"
+            st.download_button("📥 Download Bilingual Summary", bilingual_summary_text, file_name="bilingual_summary.txt")
 # -------------------- Sidebar Footer --------------------
 st.sidebar.markdown("""
     <div class='sidebar-footer'>
