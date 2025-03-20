@@ -92,7 +92,7 @@ st.markdown("""
         .custom-box:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            background:background:#454139; /*#ffffff;  */
+            background:background:#f9f9f9 /*#ffffff;  */
             # color:#454139;/*#ffffff;  */
             color:#faf7f0;
         }
@@ -255,7 +255,8 @@ if uploaded_file:
 
     st.markdown("### 📚 Extracted PDF Content")
     with st.expander("📚 **View Extracted Text**"):
-        st.write(full_text)
+        st.markdown(f"<div class='custom-box'>{full_text}</div>", unsafe_allow_html=True)
+        
 
     # 🎯 Add Slider for Summary Length
     summary_length = st.slider(
@@ -276,10 +277,12 @@ if uploaded_file:
 
             # Display both summaries
             st.markdown(f"### ✍️  {language} Summary:")
-            st.write(translated_summary)
+            st.markdown(f"<div class='custom-box'>{translated_summary}</div>", unsafe_allow_html=True)
+           
 
             st.markdown("### ✍️ English Summary:")
-            st.write(english_summary)
+            st.markdown(f"<div class='custom-box'>{english_summary}</div>", unsafe_allow_html=True)
+           
 
             
 
@@ -288,14 +291,14 @@ if uploaded_file:
                 f"English Summary:\n\n{english_summary}\n\n"
                 f"{language} Summary:\n\n{translated_summary}"
             )
+            
             st.download_button("📥 Download Summary", combined_summary, file_name="summary.txt")
 
         else:
             # Display only English summary if language is English
             st.markdown("### ✍️ English Summary:")
-            st.write(english_summary)
-
-            # Download only English summary
+            st.markdown(f"<div class='custom-box'>{english_summary}</div>", unsafe_allow_html=True)
+             # Download only English summary
             st.download_button("📥 Download Summary", english_summary, file_name="summary.txt")
 
 # -------------------- Sidebar Footer --------------------
