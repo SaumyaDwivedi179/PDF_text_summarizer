@@ -5,3 +5,5 @@ multilingual summaries, making the tool effective for global users. With its int
 Technically, the application uses PyMuPDF for efficient PDF text extraction and Google Generative AI for summarization. The project is enhanced with custom CSS styling to provide a sleek and modern user interface. 
 It also offers interactive features such as expandable content views, language selection, and downloadable summaries. The modular code structure ensures easy maintenance and scalability. This project showcases the integration
 of AI-powered text processing with a user-friendly interface, making it a practical tool for anyone needing quick and accurate PDF content summarization. 
+
+Streamlit deployment link- https://saumyadwivedi179-pdf-text-summarizer-app-ilewll.streamlit.app/
